@@ -2,8 +2,8 @@ package com.example.contentprovider
 
 import android.net.Uri
 
-data class Image(
-    val id: Long,
+data class ImageData(
+    val uri: Uri,
     val name: String,
-    val uri : Uri
+    val dateTaken: Long
 )

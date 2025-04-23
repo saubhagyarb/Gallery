@@ -2,24 +2,27 @@ package com.example.contentprovider
 
 import android.app.Application
 import android.content.ContentUris
-import android.os.Build
+import android.net.Uri
 import android.provider.MediaStore
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.util.*
 
 class ImageViewModel(application: Application) : AndroidViewModel(application) {
+    private val _groupedImages = MutableStateFlow<Map<String, List<ImageData>>>(emptyMap())
+    val groupedImages: StateFlow<Map<String, List<ImageData>>> = _groupedImages
 
-    private val _images = MutableStateFlow<List<Image>>(emptyList())
-    val images: StateFlow<List<Image>> = _images
+    init {
+        loadImages()
+    }
 
     fun loadImages() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val contentResolver = getApplication<Application>().contentResolver
+        viewModelScope.launch {
+            val context = getApplication<Application>().applicationContext
+            val images = mutableListOf<ImageData>()
 
             val projection = arrayOf(
                 MediaStore.Images.Media._ID,
@@ -27,34 +30,37 @@ class ImageViewModel(application: Application) : AndroidViewModel(application) {
                 MediaStore.Images.Media.DATE_TAKEN
             )
 
-            try {
-                contentResolver.query(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    projection,
-                    null,
-                    null,
-                    "${MediaStore.Images.Media.DATE_TAKEN} DESC"
-                )?.use { cursor ->
-                    val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-                    val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
+            val sortOrder = "${MediaStore.Images.Media.DATE_TAKEN} DESC"
 
-                    val images = mutableListOf<Image>()
-                    while (cursor.moveToNext()) {
-                        val id = cursor.getLong(idColumn)
-                        val name = cursor.getString(nameColumn)
-                        val uri = ContentUris.withAppendedId(
-                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                            id
-                        )
-                        images.add(Image(id, name, uri))
-                    }
+            context.contentResolver.query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                projection,
+                null,
+                null,
+                sortOrder
+            )?.use { cursor ->
+                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+                val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
+                val dateColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_TAKEN)
 
-                    _images.value = images
+                while (cursor.moveToNext()) {
+                    val id = cursor.getLong(idColumn)
+                    val name = cursor.getString(nameColumn)
+                    val dateTaken = cursor.getLong(dateColumn)
+                    val contentUri: Uri = ContentUris.withAppendedId(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        id
+                    )
+                    images.add(ImageData(contentUri, name, dateTaken))
                 }
-            } catch (e: SecurityException) {
-                Log.e("ImageViewModel", "Permission error: ${e.message}")
-            } catch (e: Exception) {
-                Log.e("ImageViewModel", "Query error: ${e.message}")
+            }
+
+            val dateFormatter = java.text.SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
+            _groupedImages.value = images.groupBy {
+                val calendar = Calendar.getInstance().apply {
+                    timeInMillis = it.dateTaken
+                }
+                dateFormatter.format(calendar.time)
             }
         }
     }
