@@ -7,22 +7,21 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import com.example.contentprovider.ui.theme.ContentProviderTheme
 
 class MainActivity : ComponentActivity() {
-
     private lateinit var requestPermissionLauncher: androidx.activity.result.ActivityResultLauncher<String>
     private lateinit var viewModel: ImageViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        enableEdgeToEdge()
         viewModel = ImageViewModel(application)
 
         requestPermissionLauncher = registerForActivityResult(
@@ -77,7 +76,7 @@ fun PhotosApp(viewModel: ImageViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Photos") }
+                title = { Text(stringResource(R.string.app_name)) }
             )
         }
     ) { paddingValues ->

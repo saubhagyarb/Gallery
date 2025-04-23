@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">GalleryPro</string>
+    <string name="permission_denied">Permission Denied</string>
 </resources>

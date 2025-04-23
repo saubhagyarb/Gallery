@@ -12,8 +12,12 @@ import kotlinx.coroutines.launch
 import java.util.*
 
 class ImageViewModel(application: Application) : AndroidViewModel(application) {
-    private val _groupedImages = MutableStateFlow<Map<String, List<ImageData>>>(emptyMap())
-    val groupedImages: StateFlow<Map<String, List<ImageData>>> = _groupedImages
+    private val _groupedImages = MutableStateFlow<Map<String, LinkedList<ImageData>>>(emptyMap())
+    val groupedImages: StateFlow<Map<String, LinkedList<ImageData>>> = _groupedImages
+
+    private val _allImages = MutableStateFlow<List<ImageData>>(emptyList())
+    val allImages: StateFlow<List<ImageData>> = _allImages
+
 
     init {
         loadImages()
@@ -56,12 +60,16 @@ class ImageViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             val dateFormatter = java.text.SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
+
             _groupedImages.value = images.groupBy {
                 val calendar = Calendar.getInstance().apply {
                     timeInMillis = it.dateTaken
                 }
                 dateFormatter.format(calendar.time)
-            }
+            }.mapValues { LinkedList(it.value) }
+
+            _allImages.value = images
         }
     }
+
 }
