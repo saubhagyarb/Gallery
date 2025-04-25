@@ -62,4 +62,7 @@ dependencies {
 //    implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("io.coil-kt.coil3:coil-compose:3.1.0")
 
+    val nav_version = "2.8.9"
+    implementation("androidx.navigation:navigation-compose:$nav_version")
+
 }

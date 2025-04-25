@@ -72,4 +72,8 @@ class ImageViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun getImagePosition(uri: Uri): Int {
+        val images = _allImages.value
+        return images.indexOfFirst { it.uri == uri }.coerceAtLeast(0)
+    }
 }

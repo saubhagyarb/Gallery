@@ -10,10 +10,16 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.contentprovider.ui.theme.ContentProviderTheme
+import androidx.core.net.toUri
 
 class MainActivity : ComponentActivity() {
     private lateinit var requestPermissionLauncher: androidx.activity.result.ActivityResultLauncher<String>
@@ -73,16 +79,41 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PhotosApp(viewModel: ImageViewModel) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.app_name)) }
+    val navController = rememberNavController()
+
+    NavHost(navController = navController, startDestination = "imageList") {
+        composable("imageList") {
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = { Text(stringResource(R.string.app_name)) }
+                    )
+                }
+            ) { paddingValues ->
+                ImageListScreen(
+                    viewModel = viewModel,
+                    paddingValues = paddingValues,
+                    onImageClick = { imageUri ->
+                        val imageIndex = viewModel.getImagePosition(imageUri.toUri())
+                        navController.navigate("imageDetail/$imageIndex")
+                    }
+                )
+            }
+        }
+
+        composable(
+            route = "imageDetail/{imageIndex}",
+            arguments = listOf(
+                navArgument("imageIndex") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val imageIndex = backStackEntry.arguments?.getInt("imageIndex") ?: 0
+
+            ImageDetailScreen(
+                viewModel = viewModel,
+                initialImageIndex = imageIndex,
+                onBackClick = { navController.popBackStack() }
             )
         }
-    ) { paddingValues ->
-        ImageListScreen(
-            viewModel = viewModel,
-            paddingValues = paddingValues
-        )
     }
 }

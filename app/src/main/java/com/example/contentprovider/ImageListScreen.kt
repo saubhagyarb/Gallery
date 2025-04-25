@@ -1,8 +1,7 @@
 package com.example.contentprovider
 
-import android.content.ContentValues.TAG
-import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -20,15 +19,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
-import com.example.contentprovider.ui.theme.surfaceContainerHighLightHighContrast
 
 @Composable
 fun ImageListScreen(
     viewModel: ImageViewModel,
-    paddingValues: PaddingValues
+    paddingValues: PaddingValues,
+    onImageClick: (String) -> Unit
 ) {
     val groupedImages = viewModel.groupedImages.collectAsState().value
-    Log.d(TAG, "ImageListScreen: $groupedImages")
 
     LazyVerticalGrid(
         columns = GridCells.Adaptive(110.dp),
@@ -52,18 +50,18 @@ fun ImageListScreen(
                         .padding(1.dp)
                         .aspectRatio(1f)
                         .clip(RoundedCornerShape(4.dp))
-                        .background(surfaceContainerHighLightHighContrast)
+                        .background(MaterialTheme.colorScheme.surfaceContainer)
+                        .clickable { onImageClick(image.uri.toString()) }
                 ) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(image.uri)
-                            .size(400,400)
+                            .size(400, 400)
                             .build(),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
-
                 }
             }
         }
